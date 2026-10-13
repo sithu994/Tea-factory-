@@ -4,5 +4,6 @@ dist/
 .env.local
 .env.production
 *.log
+server/data/
 .DS_Store
 Thumbs.db

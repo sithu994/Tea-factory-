@@ -1,13 +1,13 @@
 # Tea Factory Management System
 
-A full-stack Tea Factory Management System built with React, TypeScript, and Vite.
-Supports bilingual interface (English + Sinhala) for Sri Lankan tea factory operations.
+A Tea Factory Management System built with React, TypeScript, and Vite, with an
+English and Sinhala interface for Sri Lankan tea factory operations.
 
 ## Features
 
 - 🔐 Role-based login (Staff & Supplier)
 - 📋 Daily tea entry management (gross weight, deductions, net weight)
-- 📊 Monthly supplier reports with payment calculations (LKR)
+- 📊 Supplier pay sheets by month or year (LKR)
 - 💬 Real-time chat between staff and suppliers
 - 📎 File and image sharing in chat
 - 📱 Fully responsive design
@@ -15,14 +15,24 @@ Supports bilingual interface (English + Sinhala) for Sri Lankan tea factory oper
 ## Tech Stack
 
 - **Frontend**: React 18, TypeScript, Vite
+- **Backend**: Express
+- **Database**: SQLite
+- **SMS recovery**: Twilio Verify
 - **UI**: Tailwind CSS v4, Radix UI, Lucide Icons
 - **State**: React useState/useEffect
-- **Storage**: localStorage (MongoDB Atlas integration ready)
+- **Storage**: localStorage
+
+Accounts are stored in the backend database. Sign in with your username or supplier ID
+and password. Registration and password recovery use the account phone number in
+international format (for example, `+94771234567`). Registration does not send an SMS;
+password recovery sends a one-time code to the account phone.
+Supplier accounts should use the supplier ID entered on tea delivery records.
+Accounts previously stored only in a browser are not imported; create a new account.
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 20+
 - npm or pnpm
 
 ### Installation
@@ -37,11 +47,25 @@ cd tea-factory-management
 # Install dependencies
 npm install
 
+# Optional: configure Twilio credentials for SMS password recovery (see below)
+Copy-Item .env.example .env
+
 # Start development server
 npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+### SMS setup
+
+Create a Twilio Verify service and set these values in `.env`:
+
+- `TWILIO_ACCOUNT_SID`
+- `TWILIO_AUTH_TOKEN`
+- `TWILIO_VERIFY_SERVICE_SID`
+
+Forgot-password SMS recovery requires valid Twilio credentials; account registration
+and sign-in work without them. Keep `.env` private and never commit real credentials.
 
 ## Usage
 
@@ -51,9 +75,13 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 - Search and filter records by supplier ID or date
 
 ### Supplier Login
-- Select **Supplier** role on the login page
-- View monthly tea delivery reports
+- Select **Supplier** role and enter the supplier ID used on tea delivery records
+- View monthly or annual delivery records and payment totals
 - Check payment amounts in LKR
+
+### Staff Records
+- Set the delivery date at the top of the dashboard before entering supplier deliveries
+- Search records by supplier ID or select an exact date to see all suppliers recorded that day
 
 ### Chat Feature
 - Open the chat bubble (bottom-right corner)

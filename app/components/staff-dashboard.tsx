@@ -4,6 +4,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Leaf, LogOut, Plus, Search, Calendar, Scale, Minus } from 'lucide-react';
 import ChatPanel from './chat-panel';
 
@@ -18,6 +19,12 @@ interface TeaEntry {
 
 interface StaffDashboardProps {
   onLogout: () => void;
+}
+
+function getTodayDate() {
+  const today = new Date();
+  const localDate = new Date(today.getTime() - today.getTimezoneOffset() * 60_000);
+  return localDate.toISOString().slice(0, 10);
 }
 
 export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
@@ -69,12 +76,13 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
   }, [entries]);
 
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
     supplierId: '',
     grossWeight: '',
     deductions: '',
   });
 
+  const [entryDate, setEntryDate] = useState(getTodayDate);
+  const [searchMode, setSearchMode] = useState<'supplier' | 'date'>('supplier');
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,8 +101,8 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
 
     const newEntry: TeaEntry = {
       id: Date.now().toString(),
-      date: formData.date,
-      supplierId: formData.supplierId,
+      date: entryDate,
+      supplierId: formData.supplierId.trim().toUpperCase(),
       grossWeight,
       deductions,
       netWeight,
@@ -104,7 +112,6 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
     
     // Reset form
     setFormData({
-      date: new Date().toISOString().split('T')[0],
       supplierId: '',
       grossWeight: '',
       deductions: '',
@@ -113,8 +120,10 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
 
   const filteredEntries = entries.filter(
     (entry) =>
-      entry.supplierId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      entry.date.includes(searchQuery)
+      !searchQuery ||
+      (searchMode === 'supplier'
+        ? entry.supplierId.toLowerCase().includes(searchQuery.trim().toLowerCase())
+        : entry.date === searchQuery)
   );
 
   return (
@@ -146,6 +155,28 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
+        <Card className="mb-6 border-green-200 bg-gradient-to-r from-white to-green-50 shadow-md">
+          <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-green-900">
+                <Calendar className="h-5 w-5" />
+                Delivery date | සැපයුම් දිනය
+              </h2>
+              <p className="mt-1 text-sm text-green-700">
+                All supplier entries added below will use this date.
+              </p>
+            </div>
+            <Input
+              aria-label="Delivery date"
+              type="date"
+              value={entryDate}
+              onChange={(event) => setEntryDate(event.target.value)}
+              className="w-full border-green-200 sm:w-52"
+              required
+            />
+          </CardContent>
+        </Card>
+
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Left Side - Daily Tea Entry Form */}
           <Card className="shadow-xl border-green-100 h-fit">
@@ -157,23 +188,6 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
             </CardHeader>
             <CardContent className="pt-6">
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Date */}
-                <div className="space-y-2">
-                  <Label htmlFor="date" className="text-green-900 flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    Date | දිනය
-                  </Label>
-                  <Input
-                    id="date"
-                    name="date"
-                    type="date"
-                    value={formData.date}
-                    onChange={handleInputChange}
-                    className="border-green-200 focus:border-green-500"
-                    required
-                  />
-                </div>
-
                 {/* Supplier ID */}
                 <div className="space-y-2">
                   <Label htmlFor="supplierId" className="text-green-900">
@@ -242,6 +256,7 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                 {/* Submit Button */}
                 <Button
                   type="submit"
+                  disabled={!entryDate}
                   className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -258,15 +273,32 @@ export default function StaffDashboard({ onLogout }: StaffDashboardProps) {
                 <CardTitle className="text-green-900">
                   Tea Records | තේ වාර්තා
                 </CardTitle>
-                <div className="relative w-64">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                  <Select
+                    value={searchMode}
+                    onValueChange={(value: 'supplier' | 'date') => {
+                      setSearchMode(value);
+                      setSearchQuery('');
+                    }}
+                  >
+                    <SelectTrigger className="w-full border-green-200 sm:w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="supplier">Supplier ID</SelectItem>
+                      <SelectItem value="date">Delivery date</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="relative w-full sm:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
-                    type="text"
-                    placeholder="Search by ID or date..."
+                    type={searchMode === 'date' ? 'date' : 'search'}
+                    placeholder="Search supplier ID..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 border-green-200 focus:border-green-500"
                   />
+                  </div>
                 </div>
               </div>
             </CardHeader>

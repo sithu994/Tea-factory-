@@ -9,12 +9,14 @@ type UserRole = 'staff' | 'supplier' | null;
 export default function App() {
   const [currentView, setCurrentView] = useState<View>('login');
   const [userRole, setUserRole] = useState<UserRole>(null);
+  const [supplierId, setSupplierId] = useState<string>();
 
-  const handleLogin = (role: 'staff' | 'supplier') => {
+  const handleLogin = (role: 'staff' | 'supplier', username: string) => {
     setUserRole(role);
     if (role === 'staff') {
       setCurrentView('staff');
     } else {
+      setSupplierId(username.toUpperCase());
       setCurrentView('supplier');
     }
   };
@@ -22,6 +24,7 @@ export default function App() {
   const handleLogout = () => {
     setCurrentView('login');
     setUserRole(null);
+    setSupplierId(undefined);
   };
 
   return (
@@ -33,7 +36,7 @@ export default function App() {
         <StaffDashboard onLogout={handleLogout} />
       )}
       {currentView === 'supplier' && (
-        <SupplierPortal onLogout={handleLogout} />
+        <SupplierPortal onLogout={handleLogout} supplierId={supplierId} />
       )}
     </div>
   );
